@@ -1473,7 +1473,7 @@ int extcmd(lua_State *L)
     } else if (strcmp(cmd, "shutdown") == 0) {
         p8_abort();
     } else {
-        luaL_error(L, "unknown command: %s", cmd);
+        fprintf(stderr, "unsupported extcmd command: %s\n", cmd);
     }
 
     return 0;
