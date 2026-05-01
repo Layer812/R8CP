@@ -433,7 +433,7 @@ int palt(lua_State *L)
     {
         for (int col=0;col<16;++col) {
             uint8_t c = color_get(PALTYPE_DRAW, col);
-            color_set(PALTYPE_DRAW, col, c & 0xf);
+            color_set(PALTYPE_DRAW, col, col == 0 ? (c | 0x10) : (c & 0xf));
         }
     }
     else if (lua_gettop(L) == 1)
