@@ -98,7 +98,7 @@ int circ(lua_State *L)
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int r = lua_gettop(L) >= 3 ? lua_tointeger(L, 3) : 4;
-    int col = lua_gettop(L) >= 4 ? lua_tointeger(L, 4) : pencolor_get() & 0xF;
+    int col = lua_gettop(L) >= 4 ? lua_tointeger(L, 4) : pencolor_get();
     int fillp = lua_gettop(L) >= 4 ? (fix32_bits(lua_tonumber(L, 4)) & 0xffff) : 0;
 
     if (lua_gettop(L) >= 3 && (m_memory[MEMORY_MISCFLAGS] & 0x2)) {
@@ -106,6 +106,9 @@ int circ(lua_State *L)
         if (r_real - r >= 0.5)
             r++;
     }
+
+    if (lua_gettop(L) >= 4)
+        pencolor_set(col);
 
     draw_circ(x, y, r, col, fillp);
 
@@ -118,7 +121,7 @@ int circfill(lua_State *L)
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int r = lua_gettop(L) >= 3 ? lua_tointeger(L, 3) : 4;
-    int col = lua_gettop(L) >= 4 ? lua_tointeger(L, 4) : pencolor_get() & 0xF;
+    int col = lua_gettop(L) >= 4 ? lua_tointeger(L, 4) : pencolor_get();
     int fillp = lua_gettop(L) >= 4 ? (fix32_bits(lua_tonumber(L, 4)) & 0xffff) : 0;
 
     if (lua_gettop(L) >= 3 && (m_memory[MEMORY_MISCFLAGS] & 0x2)) {
@@ -126,6 +129,9 @@ int circfill(lua_State *L)
         if (r_real - r >= 0.5)
             r++;
     }
+
+    if (lua_gettop(L) >= 4)
+        pencolor_set(col);
 
     draw_circfill(x, y, r, col, fillp);
 
@@ -189,7 +195,7 @@ int cursor(lua_State *L)
     int y = lua_gettop(L) >= 2 ? lua_tointeger(L, 2) : 0;
     int color = lua_gettop(L) >= 3 ? lua_tointeger(L, 3) : -1;
 
-    cursor_set(x, y, (color == -1) ? -1 : ((pencolor_get() & 0xf0) | color));
+    cursor_set(x, y, (color == -1) ? -1 : color);
     left_margin_set(x);
 
     return 0;
@@ -280,16 +286,20 @@ int line(lua_State *L)
             y0 = lua_tointeger(L, 2);
             x1 = lua_tointeger(L, 3);
             y1 = lua_tointeger(L, 4);
-            col = lua_gettop(L) == 5 ? lua_tointeger(L, 5) : pencolor_get() & 0xF;
+            col = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : pencolor_get();
             fillp = lua_gettop(L) >= 5 ? (fix32_bits(lua_tonumber(L, 5)) & 0xffff) : 0;
+            if (lua_gettop(L) >= 5)
+                pencolor_set(col);
         } else {
             valid = !m_memory[MEMORY_LINE_VALID];
             x0 = m_memory[MEMORY_LINE_X] | (m_memory[MEMORY_LINE_X + 1] << 8);
             y0 = m_memory[MEMORY_LINE_Y] | (m_memory[MEMORY_LINE_Y + 1] << 8);
             x1 = lua_tointeger(L, 1);
             y1 = lua_tointeger(L, 2);
-            col = lua_gettop(L) == 3 ? lua_tointeger(L, 3) : pencolor_get() & 0xF;
+            col = lua_gettop(L) >= 3 ? lua_tointeger(L, 3) : pencolor_get();
             fillp = lua_gettop(L) >= 3 ? (fix32_bits(lua_tonumber(L, 3)) & 0xffff) : 0;
+            if (lua_gettop(L) >= 3)
+                pencolor_set(col);
         }
 
         if (valid)
@@ -312,8 +322,11 @@ int oval(lua_State *L)
     int y0 = lua_tointeger(L, 2);
     int x1 = lua_tointeger(L, 3);
     int y1 = lua_tointeger(L, 4);
-    int col = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : pencolor_get() & 0xF;
+    int col = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : pencolor_get();
     int fillp = lua_gettop(L) >= 5 ? (fix32_bits(lua_tonumber(L, 5)) & 0xffff) : 0;
+
+    if (lua_gettop(L) >= 5)
+        pencolor_set(col);
 
     draw_oval(x0, y0, x1, y1, col, fillp);
 
@@ -327,8 +340,11 @@ int ovalfill(lua_State *L)
     int y0 = lua_tointeger(L, 2);
     int x1 = lua_tointeger(L, 3);
     int y1 = lua_tointeger(L, 4);
-    int col = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : pencolor_get() & 0xF;
+    int col = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : pencolor_get();
     int fillp = lua_gettop(L) >= 5 ? (fix32_bits(lua_tonumber(L, 5)) & 0xffff) : 0;
+
+    if (lua_gettop(L) >= 5)
+        pencolor_set(col);
 
     draw_ovalfill(x0, y0, x1, y1, col, fillp);
 
@@ -472,7 +488,7 @@ int print(lua_State *L)
     {
         int x, y;
         cursor_get(&x, &y);
-        int col = lua_gettop(L) == 2 ? lua_tointeger(L, 2) : pencolor_get() & 0xF;
+        int col = lua_gettop(L) == 2 ? lua_tointeger(L, 2) : pencolor_get();
         if (lua_gettop(L) == 2)
             pencolor_set(col);
         draw_text(str, len, x, y, col, left_margin_get(), (m_memory[MEMORY_MISCFLAGS] & 0x4) == 0, &x, &y, &right);
@@ -484,8 +500,8 @@ int print(lua_State *L)
     {
         int x = lua_tointeger(L, 2);
         int y = lua_tointeger(L, 3);
-        int col = lua_gettop(L) == 4 ? lua_tointeger(L, 4) : pencolor_get() & 0xF;
-        if (lua_gettop(L) == 4)
+        int col = lua_gettop(L) >= 4 ? lua_tointeger(L, 4) : pencolor_get();
+        if (lua_gettop(L) >= 4)
             pencolor_set(col);
 
         left_margin_set(x);
@@ -504,8 +520,10 @@ int pset(lua_State *L)
 {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
-    int c = lua_gettop(L) == 3 ? lua_tointeger(L, 3) : pencolor_get() & 0xF;
+    int c = lua_gettop(L) == 3 ? lua_tointeger(L, 3) : pencolor_get();
     int fillp = lua_gettop(L) >= 3 ? (fix32_bits(lua_tonumber(L, 3)) & 0xffff) : 0;
+    if (lua_gettop(L) == 3)
+        pencolor_set(c);
     pixel_set(x, y, c, fillp, DRAWTYPE_GRAPHIC);
 
     return 0;
@@ -518,13 +536,16 @@ int rect(lua_State *L)
     int y0 = lua_tointeger(L, 2);
     int x1 = lua_tointeger(L, 3);
     int y1 = lua_tointeger(L, 4);
-    int col = lua_gettop(L) == 5 ? lua_tointeger(L, 5) : pencolor_get() & 0xF;
+    int col = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : pencolor_get();
     int fillp = lua_gettop(L) >= 5 ? (fix32_bits(lua_tonumber(L, 5)) & 0xffff) : 0;
 
     int left = MIN(x0, x1);
     int top = MIN(y0, y1);
     int right = MAX(x0, x1);
     int bottom = MAX(y0, y1);
+
+    if (lua_gettop(L) >= 5)
+        pencolor_set(col);
 
     draw_rect(left, top, right, bottom, col, fillp);
 
@@ -538,13 +559,16 @@ int rectfill(lua_State *L)
     int y0 = lua_tointeger(L, 2);
     int x1 = lua_tointeger(L, 3);
     int y1 = lua_tointeger(L, 4);
-    int col = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : pencolor_get() & 0xF;
+    int col = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : pencolor_get();
     int fillp = lua_gettop(L) >= 5 ? (fix32_bits(lua_tonumber(L, 5)) & 0xffff) : 0;
 
     int left = MIN(x0, x1);
     int top = MIN(y0, y1);
     int right = MAX(x0, x1);
     int bottom = MAX(y0, y1);
+
+    if (lua_gettop(L) >= 5)
+        pencolor_set(col);
 
     draw_rectfill(left, top, right, bottom, col, fillp);
 
@@ -559,8 +583,11 @@ int rrect(lua_State *L)
     int w = lua_tointeger(L, 3);
     int h = lua_tointeger(L, 4);
     int r = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : 0;
-    int col = lua_gettop(L) >= 6 ? lua_tointeger(L, 6) : pencolor_get() & 0xF;
+    int col = lua_gettop(L) >= 6 ? lua_tointeger(L, 6) : pencolor_get();
     int fillp = lua_gettop(L) >= 6 ? (fix32_bits(lua_tonumber(L, 6)) & 0xffff) : 0;
+
+    if (lua_gettop(L) >= 6)
+        pencolor_set(col);
 
     int right = left + w-1;
     int bottom = top + h-1;
@@ -586,9 +613,12 @@ int rrectfill(lua_State *L)
     int w = lua_tointeger(L, 3);
     int h = lua_tointeger(L, 4);
     int r = lua_gettop(L) >= 5 ? lua_tointeger(L, 5) : 0;
-    int col = lua_gettop(L) >= 6 ? lua_tointeger(L, 6) : pencolor_get() & 0xF;
+    int col = lua_gettop(L) >= 6 ? lua_tointeger(L, 6) : pencolor_get();
     int fillp = lua_gettop(L) >= 6 ? (fix32_bits(lua_tonumber(L, 6)) & 0xffff) : 0;
     bool invert = fillp_invert_enabled(col);
+
+    if (lua_gettop(L) >= 6)
+        pencolor_set(col);
 
     int right = left + w;
     int bottom = top + h;
@@ -673,8 +703,10 @@ int sset(lua_State *L)
 {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
-    int c = lua_gettop(L) >= 3 ? lua_tointeger(L, 3) : pencolor_get() & 0xF;
+    int c = lua_gettop(L) >= 3 ? lua_tointeger(L, 3) : pencolor_get();
 
+    if (lua_gettop(L) >= 3)
+        pencolor_set(c);
     if (x >= 0 && y >= 0 && x < P8_WIDTH && y < P8_HEIGHT)
         gfx_set(x, y, MEMORY_SPRITES, MEMORY_SPRITES_SIZE, c);
 
