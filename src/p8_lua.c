@@ -2188,9 +2188,6 @@ void lua_print_error(const char *where)
 
 void lua_init_script(const char *file_name, const char *script)
 {
-    free(s_saved_script);
-    s_saved_script = script ? strdup(script) : NULL;
-
     if (!L)
         L = luaL_newstate();
 
@@ -2206,9 +2203,12 @@ void lua_init_script(const char *file_name, const char *script)
     padded_script[0] = padded_script[1] = padded_script[2] = '\n';
     memcpy(padded_script + 3, script, script_len + 1);
     int ret = luaL_loadbuffer(L, padded_script, 3 + script_len, temp_file_name);
-    free(padded_script);
+    free(s_saved_script);
+    s_saved_script = padded_script;
 #else
     int ret = lua_loadBuffer(L, script, strlen(script), temp_file_name);
+    free(s_saved_script);
+    s_saved_script = script;
 #endif
     free(temp_file_name);
     if (ret)
