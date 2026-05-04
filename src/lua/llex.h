@@ -60,6 +60,7 @@ typedef struct LexState {
   int emiteol;  /* should EOL be emitted? */
   int lastline;  /* line of last token `consumed' */
   int braces;  /* braces context */
+  int short_nest;  /* nesting depth of active short-if/while blocks */
   Token t;  /* current token */
   Token lookahead;  /* look ahead token */
   struct FuncState *fs;  /* current function (parser) */

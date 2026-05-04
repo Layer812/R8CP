@@ -1334,20 +1334,25 @@ static void whilestat (LexState *ls, int line) {
   enterblock(fs, &bl, 1);
   int short_while = ls->t.token != TK_DO && ls->t.token != TK_EOS
                  && ls->braces == 0 && line == ls->linenumber;
-  if (short_while)
+  if (short_while) {
     ls->emiteol = 1;
+    ls->short_nest++;
+  }
   else
     checknext(ls, TK_DO);
   block(ls);
   luaK_jumpto(fs, whileinit);
   if (!short_while)
     check_match(ls, TK_END, TK_WHILE, line);
-  else if (ls->t.token == TK_EOL || ls->t.token == TK_EOS)
-    luaX_next(ls);  /* eat EOL or EOS */
-  else if (block_follow(ls, 1))
-    ls->emiteol = 0;  /* close the short WHILE */
-  else
-    check_match(ls, TK_EOL, TK_WHILE, line);  /* we expected EOL */
+  else {
+    ls->short_nest--;
+    if (ls->t.token == TK_EOL || ls->t.token == TK_EOS)
+      luaX_next(ls);  /* eat EOL or EOS */
+    else if (block_follow(ls, 1))
+      ls->emiteol = 0;  /* close the short WHILE */
+    else
+      check_match(ls, TK_EOL, TK_WHILE, line);  /* we expected EOL */
+  }
   leaveblock(fs);
   luaK_patchtohere(fs, condexit);  /* false conditions finish the loop */
 }
@@ -1488,8 +1493,10 @@ static int test_then_block (LexState *ls, int *escapelist) {
   expr(ls, &v);  /* read condition */
   short_if &= ls->t.token != TK_THEN && ls->t.token != TK_DO && ls->t.token != TK_EOS
            && ls->braces == 0 && line == ls->linenumber;
-  if (short_if)
+  if (short_if) {
     ls->emiteol = 1;
+    ls->short_nest++;
+  }
   else {
     /* PICO-8 allows 'do' as alternative to 'then' in if statements */
     if (ls->t.token == TK_DO || ls->t.token == TK_THEN)
@@ -1534,13 +1541,16 @@ static void ifstat (LexState *ls, int line) {
   if (testnext(ls, TK_ELSE))
     block(ls);  /* `else' part */
   if (!short_if)
-    check_match(ls, TK_END, TK_IF, line);
-  else if (ls->t.token == TK_EOL || ls->t.token == TK_EOS)
-    luaX_next(ls);  /* eat EOL or EOS */
-  else if (block_follow(ls, 1))
-    ls->emiteol = 0;  /* close the short IF */
-  else
-    check_match(ls, TK_EOL, TK_IF, line);  /* we expected EOL */
+     check_match(ls, TK_END, TK_IF, line);
+  else {
+    ls->short_nest--;
+    if (ls->t.token == TK_EOL || ls->t.token == TK_EOS)
+      luaX_next(ls);  /* eat EOL or EOS */
+    else if (block_follow(ls, 1))
+      ls->emiteol = 0;  /* close the short IF */
+    else
+      check_match(ls, TK_EOL, TK_IF, line);  /* we expected EOL */
+  }
   luaK_patchtohere(fs, escapelist);  /* patch escape list to 'if' end */
 }
 
@@ -1678,6 +1688,14 @@ static void shortprint (LexState *ls) {
 
   if (!testnext(ls, TK_EOS)) /* check that we are at EOL or EOS */
     check_match(ls, TK_EOL, '?', line);
+
+  /* If we're inside a short-if/while, it was relying on TK_EOL to terminate
+     itself, but shortprint just consumed that EOL. Re-inject a synthetic
+     TK_EOL so the enclosing short block can still see it and terminate. */
+  if (ls->short_nest > 0) {
+    ls->lookahead = ls->t;
+    ls->t.token = TK_EOL;
+  }
 
   int base, nparams;
   lua_assert(f.k == VNONRELOC);
