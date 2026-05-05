@@ -254,6 +254,8 @@ static int p8_init_common(const char *file_name, const char *lua_script)
     if (setjmp(jmpbuf_restart)) {
         if (!restart)
             return 0;
+        lua_shutdown_api();
+        lua_load_api();
     }
 
     restart = false;
