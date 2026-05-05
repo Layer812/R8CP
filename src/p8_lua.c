@@ -1908,6 +1908,26 @@ int _stop(lua_State *L)
     p8_abort();
 }
 
+// trace([coroutine,] [message,] [skip])
+// Returns a description of the current call stack as a string.
+// Mirrors debug.traceback() with PICO-8's default skip of 1.
+int _trace(lua_State *L)
+{
+    int arg = 0;
+    lua_State *L1 = L;
+
+    if (lua_isthread(L, 1)) {
+        L1 = lua_tothread(L, 1);
+        arg = 1;
+    }
+
+    const char *msg = lua_isnoneornil(L, arg + 1) ? NULL : lua_tostring(L, arg + 1);
+    int level = lua_isnoneornil(L, arg + 2) ? 1 : lua_tointeger(L, arg + 2);
+
+    luaL_traceback(L, L1, msg, level);
+    return 1;
+}
+
 // ****************************************************************
 // *** Misc ***
 // ****************************************************************
@@ -2118,7 +2138,7 @@ void lua_register_functions(lua_State *L)
     lua_register(L, "printh", printh);
     lua_register(L, "stat", _stat);
     lua_register(L, "stop", _stop);
-    // lua_register(L, "trace, trace);
+    lua_register(L, "trace", _trace);
     // ****************************************************************
     // *** Misc ***
     // ****************************************************************
