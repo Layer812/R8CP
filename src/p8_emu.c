@@ -1055,12 +1055,13 @@ void p8_flip()
 
 static void p8_main_loop()
 {
-    const int target_frame_time = 1000 / m_fps;
     int time_debt = 0;
     unsigned updates_since_last_flip = 0;
 
     for (;;)
     {
+        const int target_frame_time = 1000 / m_fps;
+
         lua_update();
         updates_since_last_flip++;
 

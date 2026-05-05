@@ -2054,6 +2054,7 @@ void lua_register_functions(lua_State *L)
     lua_register(L, "reset", reset);
     lua_register(L, "run", run);
     lua_register(L, "serial", serial);
+    lua_register(L, "_set_fps", set_fps);
     // ****************************************************************
     // *** Debugging ***
     // ****************************************************************
