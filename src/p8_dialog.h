@@ -114,7 +114,7 @@ typedef enum {
 typedef struct {
     p8_dialog_result_t type;
     int action_id;              // For DIALOG_RESULT_BUTTON
-    uint16_t button_mask;       // For DIALOG_RESULT_BUTTON on MENUITEM: femto8 button mask of triggering button(s)
+    uint16_t button_mask;       // For DIALOG_RESULT_BUTTON on MENUITEM: button mask of triggering button(s)
 } p8_dialog_action_t;
 
 /* Color Scheme */

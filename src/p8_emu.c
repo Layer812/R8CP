@@ -87,6 +87,7 @@ static bool load_requested = false;
 static char *load_filename = NULL;
 static char *load_param = NULL;
 char *current_cart_dir = NULL;
+char *current_cart_path = NULL;
 
 char *m_breadcrumb = NULL;
 
@@ -314,6 +315,11 @@ int p8_init_file_with_param(const char *file_name, const char *param)
 #else
         free(current_cart_dir);
 #endif
+    }
+
+    if (current_cart_path) {
+        free(current_cart_path);
+        current_cart_path = NULL;
     }
 
     const char *last_slash = strrchr(file_name, '/');

@@ -267,6 +267,7 @@ extern char *m_font;
 
 extern uint8_t *m_overlay_memory;
 extern char *current_cart_dir;
+extern char *current_cart_path;
 
 extern char *m_breadcrumb;
 

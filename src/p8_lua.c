@@ -38,6 +38,7 @@
 #include "p8_print_helper.h"
 #include "pico_font.h"
 #include "p8_parser.h"
+#include "p8_cstore.h"
 #include "p8_pause_menu.h"
 #include "lua_api.h"
 #include "lua.h"
@@ -1144,9 +1145,87 @@ int mset(lua_State *L)
 // cstore(destaddr, sourceaddr, len, [filename])
 int cstore(lua_State *L)
 {
-    unsigned destaddr = lua_gettop(L) >= 1 ? lua_tounsigned(L, 1) : 0;
-    fprintf(stderr, "warning: cstore() is not implemented\n");
-    lua_pushinteger(L, destaddr);
+    int nargs = lua_gettop(L);
+    unsigned destaddr  = nargs >= 1 ? lua_tounsigned(L, 1) : 0;
+    unsigned orig_dest = destaddr;
+    unsigned srcaddr   = nargs >= 2 ? lua_tounsigned(L, 2) : 0;
+    unsigned len       = nargs >= 3 ? lua_tounsigned(L, 3) : CART_MEMORY_SIZE;
+    const char *file_name = nargs >= 4 ? lua_tostring(L, 4) : NULL;
+
+    if (destaddr + len > CART_MEMORY_SIZE || srcaddr + len > (1 << 16)) {
+        lua_pushinteger(L, orig_dest);
+        return 1;
+    }
+
+    char *resolved_path = NULL;
+    if (file_name != NULL) {
+        // Append .p8 if no extension given
+        char *full_filename = NULL;
+        if (strstr(file_name, ".p8") == NULL && strstr(file_name, ".P8") == NULL) {
+            size_t flen = strlen(file_name) + 4;
+            full_filename = (char *)malloc(flen);
+            if (full_filename)
+                snprintf(full_filename, flen, "%s.p8", file_name);
+            file_name = full_filename;
+        }
+        resolved_path = p8_resolve_relative_path(file_name);
+        free(full_filename);
+    } else {
+        if (!current_cart_path) {
+            lua_pushinteger(L, orig_dest);
+            return 1;
+        }
+        resolved_path = strdup(current_cart_path);
+    }
+
+    if (!resolved_path) {
+        lua_pushinteger(L, orig_dest);
+        return 1;
+    }
+
+    // Refuse to write .p8.png (not supported)
+    size_t rlen = strlen(resolved_path);
+    if (rlen >= 7 && strcmp(resolved_path + rlen - 7, ".p8.png") == 0) {
+        fprintf(stderr, "cstore: .p8.png output is not supported\n");
+        free(resolved_path);
+        lua_pushinteger(L, orig_dest);
+        return 1;
+    }
+
+    p8_show_io_icon(true);
+
+    // Load existing cart data (preserves sections not being patched, including Lua)
+    uint8_t *work_mem = (uint8_t *)malloc(CART_MEMORY_SIZE);
+    const char *existing_lua = NULL;
+    uint8_t *file_buffer = NULL;
+    if (!work_mem || parse_cart_file(resolved_path, work_mem, &existing_lua, &file_buffer, NULL) != 0) {
+        // Target does not exist yet - start from zeroed memory, empty Lua
+        if (work_mem)
+            memset(work_mem, 0, CART_MEMORY_SIZE);
+        else {
+            free(resolved_path);
+            p8_show_io_icon(false);
+            lua_pushinteger(L, orig_dest);
+            return 1;
+        }
+        existing_lua = "";
+    }
+
+    // Patch the requested region from runtime memory
+    memcpy(work_mem + destaddr, m_memory + srcaddr, len);
+
+    // Also update m_cart_memory when writing to the current cart
+    if (nargs < 4 || lua_isnil(L, 4))
+        memcpy(m_cart_memory + destaddr, m_memory + srcaddr, len);
+
+    write_cart_p8(resolved_path, existing_lua ? existing_lua : "", work_mem);
+
+    free(work_mem);
+    free(file_buffer);
+    free(resolved_path);
+
+    p8_show_io_icon(false);
+    lua_pushinteger(L, orig_dest);
     return 1;
 }
 
