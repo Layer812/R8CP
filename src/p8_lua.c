@@ -1147,13 +1147,12 @@ int cstore(lua_State *L)
 {
     int nargs = lua_gettop(L);
     unsigned destaddr  = nargs >= 1 ? lua_tounsigned(L, 1) : 0;
-    unsigned orig_dest = destaddr;
     unsigned srcaddr   = nargs >= 2 ? lua_tounsigned(L, 2) : 0;
     unsigned len       = nargs >= 3 ? lua_tounsigned(L, 3) : CART_MEMORY_SIZE;
     const char *file_name = nargs >= 4 ? lua_tostring(L, 4) : NULL;
 
     if (destaddr + len > CART_MEMORY_SIZE || srcaddr + len > (1 << 16)) {
-        lua_pushinteger(L, orig_dest);
+        lua_pushinteger(L, 0);
         return 1;
     }
 
@@ -1172,14 +1171,14 @@ int cstore(lua_State *L)
         free(full_filename);
     } else {
         if (!current_cart_path) {
-            lua_pushinteger(L, orig_dest);
+            lua_pushinteger(L, 0);
             return 1;
         }
         resolved_path = strdup(current_cart_path);
     }
 
     if (!resolved_path) {
-        lua_pushinteger(L, orig_dest);
+        lua_pushinteger(L, 0);
         return 1;
     }
 
@@ -1188,7 +1187,7 @@ int cstore(lua_State *L)
     if (rlen >= 7 && strcmp(resolved_path + rlen - 7, ".p8.png") == 0) {
         fprintf(stderr, "cstore: .p8.png output is not supported\n");
         free(resolved_path);
-        lua_pushinteger(L, orig_dest);
+        lua_pushinteger(L, 0);
         return 1;
     }
 
@@ -1205,7 +1204,7 @@ int cstore(lua_State *L)
         else {
             free(resolved_path);
             p8_show_io_icon(false);
-            lua_pushinteger(L, orig_dest);
+            lua_pushinteger(L, 0);
             return 1;
         }
         existing_lua = "";
@@ -1225,7 +1224,7 @@ int cstore(lua_State *L)
     free(resolved_path);
 
     p8_show_io_icon(false);
-    lua_pushinteger(L, orig_dest);
+    lua_pushinteger(L, len);
     return 1;
 }
 
