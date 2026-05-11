@@ -193,6 +193,8 @@ static inline void draw_text(const char *str, unsigned str_len, int x, int y, in
     int wrap_boundary = 128;
     bool wrap_enabled = m_memory[MEMORY_MISCFLAGS] & 0x80;
     int last_advance = GLYPH_WIDTH;
+    int home_x = x;
+    int home_y = y;
 
     uint8_t text_attrs = m_memory[MEMORY_TEXT_ATTRS];
     bool use_defaults = (text_attrs & 0x1) != 0;
@@ -295,6 +297,8 @@ static inline void draw_text(const char *str, unsigned str_len, int x, int y, in
                                 clear_screen(clear_col);
                                 x = 0;
                                 y = 0;
+                                home_x = 0;
+                                home_y = 0;
                                 left_margin = 0;
                             }
                             break;
@@ -304,8 +308,12 @@ static inline void draw_text(const char *str, unsigned str_len, int x, int y, in
                             }
                             break;
                         case 'g':
+                            x = home_x;
+                            y = home_y;
                             break;
                         case 'h':
+                            home_x = x;
+                            home_y = y;
                             break;
                         case 'j':
                             if (i + 2 < str_len) {
