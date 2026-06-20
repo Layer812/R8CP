@@ -1,6 +1,6 @@
 # RONTO8 for M5Cardputer (v0.4)
 
-![RONTO8 Logo](/images/screenshot1.png)
+![RONTO8 Logo](r8cp.gif)
 
 RONTO8 is an experimental PICO-8 compatible fantasy console emulator specially designed and optimized for the **M5Stack Cardputer**. It is based on [femto8](https://github.com/benbaker76/femto8) and [zepto8](https://github.com/samhocevar/zepto8), bringing the joy of portable PICO-8 gaming and coding to this compact, ESP32-S3-powered device.
 
