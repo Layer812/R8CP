@@ -222,11 +222,6 @@ static void emulator_init_task(void *pvParameters)
 
 extern "C" void m5stack_update_input()
 {
-    static int frame_count = 0;
-    frame_count++;
-    if (frame_count % 60 == 0) {
-        Serial.printf("m5stack_update_input running. frame: %d, FPS: %d, Free Heap: %u bytes, LFB: %u bytes\n", frame_count, m_actual_fps, esp_get_free_heap_size(), heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-    }
 
     uint8_t mask = 0;
 
