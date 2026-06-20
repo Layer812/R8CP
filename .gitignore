@@ -6,3 +6,4 @@ build-mac
 .vscode/
 *.BAK
 SDL-1.2/
+sample/
