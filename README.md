@@ -38,12 +38,21 @@ RONTO8は、**M5Stack Cardputer** 専用に設計および最適化された PIC
 - **Down**: `S` or `.`
 - **Select / Open Folder**: `ENTER`
 
-## ⚙️ Setup & Building / ビルド方法
+## ⚙️ Installation / インストール
+
+### Via M5Burner (Recommended)
+You can easily install RONTO8 using M5Burner with the following share code:
+- **Share Code**: `pgrbeoPrOeXVnea8`
+
+M5Burnerのシェアコード検索から簡単にインストールできます：
+- **シェアコード**: `pgrbeoPrOeXVnea8`
+
+### Building from Source / ソースからビルドする場合
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/benbaker76/femto8.git ronto8
-   cd ronto8
+   git clone https://github.com/Layer812/R8CP.git
+   cd R8CP
    ```
 2. Build and upload using PlatformIO:
    ```bash
@@ -60,6 +69,5 @@ RONTO8 is heavily based on the incredible work of the open-source community:
 - [Jacopo Santoni](https://github.com/Jakz) - Author of [retro8](https://github.com/Jakz/retro8)
 - [Lexaloffle](https://www.lexaloffle.com/) - The visionary creator of the amazing PICO-8 fantasy console.
 - **Layer8** - M5Cardputer Port, Audio engine fixes, and memory optimization.
-- **Share Code**: pgrbeoPrOeXVnea8
 
 *(C) 2026 Layer8. BASED ON FEMTO8 & ZEPTO8.*
