@@ -7,3 +7,4 @@ build-mac
 *.BAK
 SDL-1.2/
 sample/
+*.bin
