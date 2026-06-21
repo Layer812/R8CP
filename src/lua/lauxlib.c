@@ -916,21 +916,68 @@ LUALIB_API const char *luaL_gsub (lua_State *L, const char *s, const char *p,
 }
 
 
+size_t g_lua_memory_usage = 0;
+size_t g_lua_active_blocks = 0;
+size_t g_lua_total_allocs = 0;
+size_t g_lua_total_frees = 0;
+
 static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
-  (void)ud; (void)osize;  /* not used */
-  if (nsize == 0) {
-    free(ptr);
-    return NULL;
-  }
-  else {
-    void *new_ptr = realloc(ptr, nsize);
-    if (!new_ptr) {
+  (void)ud;
+    if (ptr == NULL) {
+#ifdef OS_FREERTOS
+      extern uint32_t esp_get_free_heap_size(void);
+      if (esp_get_free_heap_size() < 4000) {
+        return NULL;
+      }
+#endif
+      // Allocate new block
+      void *new_ptr = malloc(nsize);
+      if (new_ptr) {
+      g_lua_memory_usage += nsize;
+      g_lua_active_blocks++;
+      g_lua_total_allocs++;
+    } else {
 #ifdef OS_FREERTOS
         extern uint32_t esp_get_free_heap_size(void);
         extern size_t heap_caps_get_largest_free_block(uint32_t caps);
-        printf("l_alloc FAILED! Requested size: %u, Free Heap: %u, LFB: %u\n", (unsigned int)nsize, esp_get_free_heap_size(), heap_caps_get_largest_free_block(1));
-#else
-        printf("l_alloc FAILED! Requested size: %u\n", (unsigned int)nsize);
+        printf("l_alloc FAILED (malloc)! Requested size: %u, Free Heap: %u, LFB: %u\n", (unsigned int)nsize, esp_get_free_heap_size(), heap_caps_get_largest_free_block(1));
+#endif
+    }
+    return new_ptr;
+  } else if (nsize == 0) {
+    // Free existing block
+    if (g_lua_memory_usage >= osize) {
+        g_lua_memory_usage -= osize;
+    } else {
+        g_lua_memory_usage = 0; // Prevent underflow if somehow out of sync
+    }
+    if (g_lua_active_blocks > 0) g_lua_active_blocks--;
+    g_lua_total_frees++;
+    free(ptr);
+    return NULL;
+  } else {
+    // Reallocate existing block
+#ifdef OS_FREERTOS
+    if (nsize > osize) {
+      extern uint32_t esp_get_free_heap_size(void);
+      if (esp_get_free_heap_size() < 4000) {
+        return NULL;
+      }
+    }
+#endif
+    void *new_ptr = realloc(ptr, nsize);
+    if (new_ptr) {
+      g_lua_memory_usage += nsize;
+      if (g_lua_memory_usage >= osize) {
+          g_lua_memory_usage -= osize;
+      } else {
+          g_lua_memory_usage = 0;
+      }
+    } else {
+#ifdef OS_FREERTOS
+        extern uint32_t esp_get_free_heap_size(void);
+        extern size_t heap_caps_get_largest_free_block(uint32_t caps);
+        printf("l_alloc FAILED (realloc)! Requested size: %u, Free Heap: %u, LFB: %u\n", (unsigned int)nsize, esp_get_free_heap_size(), heap_caps_get_largest_free_block(1));
 #endif
     }
     return new_ptr;

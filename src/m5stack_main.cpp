@@ -31,7 +31,7 @@ static volatile bool g_emulator_init_failed = false;
 static volatile bool g_audio_task_started = false;
 
 
-static uint16_t* frame_buf = NULL; // 32KB frame buffer, dynamically allocated
+// frame_buf has been removed to save 32KB SRAM
 
 static bool is_rom_file(const String& name)
 {
@@ -48,6 +48,12 @@ static void scan_browser_directory(const String& path)
     File dir = SD.open(path.c_str());
     if (!dir || !dir.isDirectory())
         return;
+
+    if (path != "/" && path != "/sd" && path != "/sd/" && g_browser_count < MAX_BROWSER_ENTRIES) {
+        g_browser_entries[g_browser_count] = "..";
+        g_browser_is_dir[g_browser_count] = true;
+        g_browser_count++;
+    }
 
     while (true) {
         File entry = dir.openNextFile();
@@ -137,11 +143,15 @@ static String browse_for_rom()
 
         bool up = false;
         bool down = false;
+        bool left = false;
+        bool right = false;
         bool enter = ks.enter || ks.space;
 
         for (char c : ks.word) {
             if (c == 'w' || c == 'W' || c == 'u' || c == 'U' || c == ';') up = true;
-            if (c == 's' || c == 'S' || c == 'd' || c == 'D' || c == '.') down = true;
+            if (c == 's' || c == 'S' || c == '.') down = true;
+            if (c == 'a' || c == 'A' || c == ',') left = true;
+            if (c == 'd' || c == 'D' || c == '/') right = true;
             if (c == '\n' || c == '\r') enter = true;
         }
 
@@ -151,12 +161,30 @@ static String browse_for_rom()
         } else if (down && g_browser_cursor + 1 < g_browser_count) {
             g_browser_cursor++;
             draw_browser();
+        } else if (left) {
+            g_browser_cursor -= 5;
+            if (g_browser_cursor < 0) g_browser_cursor = 0;
+            draw_browser();
+        } else if (right) {
+            g_browser_cursor += 5;
+            if (g_browser_cursor >= g_browser_count) g_browser_cursor = g_browser_count - 1;
+            if (g_browser_cursor < 0) g_browser_cursor = 0; // Check for 0 elements
+            draw_browser();
         } else if (enter && g_browser_count > 0) {
             if (g_browser_is_dir[g_browser_cursor]) {
-                String next = g_browser_path;
-                if (!next.endsWith("/")) next += "/";
-                next += g_browser_entries[g_browser_cursor];
-                g_browser_path = next;
+                if (g_browser_entries[g_browser_cursor] == "..") {
+                    int last_slash = g_browser_path.lastIndexOf('/', g_browser_path.length() - 2);
+                    if (last_slash >= 0) {
+                        g_browser_path = g_browser_path.substring(0, last_slash + 1);
+                    } else {
+                        g_browser_path = "/";
+                    }
+                } else {
+                    String next = g_browser_path;
+                    if (!next.endsWith("/")) next += "/";
+                    next += g_browser_entries[g_browser_cursor];
+                    g_browser_path = next;
+                }
                 scan_browser_directory(g_browser_path);
                 draw_browser();
             } else {
@@ -235,45 +263,47 @@ extern "C" void m5stack_update_input()
         if (c == 'd' || c == 'D' || c == 0x04 || c == '/') mask |= 2; // RIGHT
         if (c == 'w' || c == 'W' || c == 0x01 || c == ';') mask |= 4; // UP
         if (c == 's' || c == 'S' || c == 0x02 || c == '.') mask |= 8; // DOWN
-        if (c == '\n' || c == '\r' || c == 'z' || c == 'Z' || c == 'k' || c == 'K') mask |= 32; // X
-        if (c == ' ' || c == 'x' || c == 'X' || c == 'v' || c == 'V') mask |= 16; // O
+        if (c == '\n' || c == '\r' || c == 'x' || c == 'X' || c == 'k' || c == 'K') mask |= 32; // X
+        if (c == ' ' || c == 'z' || c == 'Z' || c == 'v' || c == 'V') mask |= 16; // O
         if (c == 0x1b || c == '\t' || c == 'm' || c == 'M') mask |= 64; // START
     }
 
     m_buttons[0] = mask;
 }
 
-extern "C" void m5stack_suspend_frame_buf(void)
-{
-    // Do not free frame_buf here. Keep it allocated to prevent fragmentation.
-}
-
-extern "C" void m5stack_resume_frame_buf(void)
-{
-    // Do nothing. frame_buf is allocated in setup().
-}
+extern "C" void m5stack_suspend_frame_buf(void) { }
+extern "C" void m5stack_resume_frame_buf(void) { }
 
 
 extern "C" void p8_render()
 {
+    if (!m_memory) return;
     uint8_t* vram = &m_memory[0x6000]; // VRAM starts at 0x6000
     
-    // Decode 4-bit indexed colors to 16-bit RGB565 directly into the frame buffer
-    if (frame_buf && m_memory) {
-        for (int y = 0; y < 128; y++) {
+    // Decode 4-bit indexed colors to 16-bit RGB565 into a local line buffer
+    const int LINE_BUFFER_HEIGHT = 8;
+    uint16_t line_buffer[128 * LINE_BUFFER_HEIGHT];
+    
+    int start_x = (M5Cardputer.Display.width() - 128) / 2;
+    int start_y = (M5Cardputer.Display.height() - 128) / 2;
+
+    M5Cardputer.Display.startWrite();
+    for (int block_y = 0; block_y < 128; block_y += LINE_BUFFER_HEIGHT) {
+        for (int y = 0; y < LINE_BUFFER_HEIGHT; y++) {
+            int absolute_y = block_y + y;
             for (int x = 0; x < 128; x++) {
-                // ... color mapping logic ...
                 uint8_t c;
                 if (x % 2 == 0) {
-                    c = m_memory[0x6000 + (y * 64) + (x / 2)] & 0x0F;
+                    c = vram[(absolute_y * 64) + (x / 2)] & 0x0F;
                 } else {
-                    c = m_memory[0x6000 + (y * 64) + (x / 2)] >> 4;
+                    c = vram[(absolute_y * 64) + (x / 2)] >> 4;
                 }
-                frame_buf[y * 128 + x] = m_colors[c];
+                line_buffer[y * 128 + x] = m_colors[c];
             }
         }
-        M5Cardputer.Display.pushImage((M5Cardputer.Display.width() - 128) / 2, (M5Cardputer.Display.height() - 128) / 2, 128, 128, frame_buf);
+        M5Cardputer.Display.pushImage(start_x, start_y + block_y, 128, LINE_BUFFER_HEIGHT, line_buffer);
     }
+    M5Cardputer.Display.endWrite();
 }
 
 void show_ronto8_splash() {
@@ -355,22 +385,14 @@ void setup()
     
     // Allocate frame_buf and m_memory here when the heap is completely free, 
     // to guarantee we get large contiguous blocks (96KB total).
-    if (!frame_buf) {
-        frame_buf = (uint16_t*)malloc(128 * 128 * 2);
-        if (frame_buf) {
-            memset(frame_buf, 0, 128 * 128 * 2);
-            Serial.printf("[Memory] frame_buf (32KB) allocated as early singleton.\n");
-        } else {
-            Serial.printf("[Memory] FATAL: Failed to allocate frame_buf at boot!\n");
-        }
-    }
+    // frame_buf allocation removed. m_memory is allocated elsewhere.
 
     extern unsigned char *m_memory;
     if (!m_memory) {
-        m_memory = (uint8_t *)malloc(0x10000); // 64KB MEMORY_SIZE
+        m_memory = (uint8_t *)malloc(MEMORY_SIZE); // 32KB
         if (m_memory) {
-            memset(m_memory, 0, 0x10000);
-            Serial.printf("[Memory] m_memory (64KB) allocated as early singleton.\n");
+            memset(m_memory, 0, MEMORY_SIZE);
+            Serial.printf("[Memory] m_memory (32KB) allocated as early singleton.\n");
         } else {
             Serial.printf("[Memory] FATAL: Failed to allocate m_memory at boot!\n");
         }
@@ -388,6 +410,7 @@ void setup()
     
     M5Cardputer.Display.setRotation(1);
     M5Cardputer.Display.setColorDepth(16);
+    M5Cardputer.Display.setSwapBytes(true);
     M5Cardputer.Display.fillScreen(TFT_BLACK);
     M5Cardputer.Display.setTextColor(TFT_WHITE, TFT_BLACK);
     M5Cardputer.Display.setTextSize(1);
@@ -449,7 +472,7 @@ void setup()
         g_emulator_ready = false;
         g_emulator_init_failed = false;
 
-        xTaskCreatePinnedToCore(emulator_init_task, "emulator_init_task", 32768, (void *)param_path, 2, NULL, 1);
+        xTaskCreatePinnedToCore(emulator_init_task, "emulator_init_task", 8192, (void *)param_path, 2, NULL, 1);
 
         return;
     } else {

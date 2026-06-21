@@ -15,5 +15,6 @@ int parse_cart_file(const char *file_name, uint8_t *memory, const char **lua_scr
 void p8_unmap_lua_script(void);
 const void* p8_map_cart_memory(const uint8_t* cart_data, size_t length);
 void p8_unmap_cart_memory(void);
+void convert_utf8_to_p8scii(uint8_t *buffer, size_t len);
 
 #endif

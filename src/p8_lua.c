@@ -45,6 +45,7 @@
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+#include "lua/lstate.h"
 
 lua_State *L = NULL;
 
@@ -880,7 +881,7 @@ int tline(lua_State *L)
             uint8_t ms = (cely >= 32 && map_start_upper < 0x80) ? map_start_lower : map_start_upper;
             int adj_cely = (cely >= 32 && map_start_upper < 0x80) ? cely - 32 : cely;
             int address = (ms << 8) + celx + adj_cely * map_width;
-            if (address >= 0x1000 && address < 0x10000 &&
+            if (address >= 0x1000 && address < 0x8000 &&
                 !(address >= 0x3000 && address < 0x8000))
                 index = m_memory[address];
         }
@@ -1096,7 +1097,7 @@ int map(lua_State *L)
     if (default_celw == 0)
         default_celw = 128;
     int map_start = m_memory[MEMORY_MAP_START];
-    int max_map_cells = (map_start >= 0x80) ? (0x10000 - (map_start << 8)) : 0x2000;
+    int max_map_cells = (map_start >= 0x80) ? (0x8000 - (map_start << 8)) : 0x2000;
     int default_celh = (default_celw > 0) ? (max_map_cells / default_celw) : 64;
 
     int celx = lua_gettop(L) >= 1 ? lua_tointeger(L, 1) : 0;
@@ -1173,7 +1174,7 @@ int cstore(lua_State *L)
     unsigned len       = nargs >= 3 ? lua_tounsigned(L, 3) : CART_MEMORY_SIZE;
     const char *file_name = nargs >= 4 ? lua_tostring(L, 4) : NULL;
 
-    if (destaddr + len > CART_MEMORY_SIZE || srcaddr + len > (1 << 16)) {
+    if (destaddr + len > CART_MEMORY_SIZE || srcaddr + len > MEMORY_SIZE) {
         lua_pushinteger(L, 0);
         return 1;
     }
@@ -1502,7 +1503,7 @@ int reload(lua_State *L)
     } else {
         src_mem = m_memory;
     }
-    if (destaddr >= 0 && destaddr + len <= 0x10000 && srcaddr >= 0 && srcaddr + len <= CART_MEMORY_SIZE)
+    if (destaddr >= 0 && destaddr + len <= 0x8000 && srcaddr >= 0 && srcaddr + len <= CART_MEMORY_SIZE)
         memcpy(m_memory + destaddr, src_mem + srcaddr, len);
     if (file_name != NULL) {
         free(src_mem);
@@ -2117,17 +2118,16 @@ int _trace(lua_State *L)
 // *** Misc ***
 // ****************************************************************
 
-// ****************************************************************
-// ****************************************************************
+#include "lua/lstate.h"
 
 int warning(lua_State *L)
 {
-    const char *msg = lua_tostring(L, 1);
-
-    printf("WARNING: %s\r\n", msg);
-
+    const char *text = lua_tostring(L, 1);
+    printf("warning: %s\n", text);
     return 0;
 }
+
+
 
 int set_fps(lua_State *L)
 {

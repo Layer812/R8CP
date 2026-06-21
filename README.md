@@ -1,6 +1,6 @@
-# RONTO8 for M5Cardputer (v0.4)
+# RONTO8 for M5Cardputer (v0.5)
 
-![RONTO8 Logo](r8cp.gif)
+![RONTO8 Logo](blue.gif)
 
 RONTO8 is an experimental PICO-8 compatible fantasy console emulator specially designed and optimized for the **M5Stack Cardputer**. It is based on [femto8](https://github.com/benbaker76/femto8) and [zepto8](https://github.com/samhocevar/zepto8), bringing the joy of portable PICO-8 gaming and coding to this compact, ESP32-S3-powered device.
 
@@ -25,27 +25,33 @@ RONTO8は、**M5Stack Cardputer** 専用に設計および最適化された PIC
   - 組み込み環境のメモリ制限を克服するため、Luaコンパイラとガベージコレクションを徹底的にチューニング。
 - **Audio Support**: Enhanced audio synthesis for authentic PICO-8 SFX and Music playback.
   - PICO-8特有の効果音（SFX）やBGMを再現するオーディオエンジンを搭載。
+- **Color Palette Fix**: Corrected PICO-8 color palette for accurate color reproduction.
+  - PICO-8カラーパレットの色再現精度を修正。
+- **Game Patch System**: Apply `.p8t` patch files at startup to make larger cartridges run on RONTO8.
+  - 起動時に `.p8t` パッチファイルを適用し、大きめのカートリッジをROMとして動作させるゲームパッチ機能。
+
 
 ## 🎮 Controls / 操作方法
 
 - **D-Pad / 方向キー**: `W`, `A`, `S`, `D`
 - **Button O (Z/C)**: `Z` or `N`
 - **Button X (X/V)**: `X` or `M`
-- **Start / Pause**: `P` or `ENTER`
+- **Start / Pause**: `Enter`
+- **Pause (Alt)**: `P`
 
 **In the ROM Browser / ROMブラウザでの操作**:
 - **Up**: `W` or `;`
 - **Down**: `S` or `.`
-- **Select / Open Folder**: `ENTER`
+- **Select / Open Folder**: `Enter`
 
 ## ⚙️ Installation / インストール
 
 ### Via M5Burner (Recommended)
 You can easily install RONTO8 using M5Burner with the following share code:
-- **Share Code**: `pgrbeoPrOeXVnea8`
+- **Share Code**: `rSROLPWU9dGIuN3I`
 
 M5Burnerのシェアコード検索から簡単にインストールできます：
-- **シェアコード**: `pgrbeoPrOeXVnea8`
+- **シェアコード**: `rSROLPWU9dGIuN3I`
 
 ### Building from Source / ソースからビルドする場合
 
@@ -61,6 +67,25 @@ M5Burnerのシェアコード検索から簡単にインストールできます
 3. Prepare the SD Card:
    Place your `.p8.png` or `.p8` files on the root or in a folder on your MicroSD card and insert it into the Cardputer.
    - MicroSDカードのルートやフォルダ内に `.p8.png` または `.p8` ファイルを置き、Cardputerに挿入してください。
+4. (Optional) Game Patches:
+   Patch files (`.p8t`) for supported games are included in the [`carts/`](carts/) folder of this repository. Place the `.p8t` file with the **same filename** as the ROM in the same folder on your SD card. The patch will be applied automatically at startup.
+   - 対応ゲームのパッチファイル（`.p8t`）はこのリポジトリの [`carts/`](carts/) フォルダに収録されています。SDカード上でROMと**同じフォルダ・同じファイル名**で `.p8t` ファイルを置くと、起動時に自動的に適用されます。
+
+## 🩹 Game Patch Compatibility / ゲームパッチ対応リスト
+
+The following games require a `.p8t` patch to run on RONTO8 due to their cartridge size.  
+Patch files are available in the [`carts/`](carts/) folder of this repository.
+
+以下のゲームはカートリッジサイズの関係でROMの書き替えが必要なため、`.p8t` パッチが必要です。  
+パッチファイルはリポジトリの [`carts/`](carts/) フォルダに収録されています。
+
+| Game / ゲーム | Author | PICO-8 BBS | Patch File |
+|---|---|---|---|
+| Desert Drift | [johanp](https://www.lexaloffle.com/bbs/?uid=15227) | [#31685](https://www.lexaloffle.com/bbs/?tid=31685) | [`Desert Drift.p8t`](carts/Desert%20Drift.p8t) |
+
+> More patches coming soon! / 今後も対応ゲームを追加予定です。
+
+---
 
 ## 🙏 Credits and Acknowledgments / 謝辞
 

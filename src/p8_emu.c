@@ -28,6 +28,7 @@
 #include "p8_audio.h"
 #include "p8_dialog.h"
 #include "p8_emu.h"
+#include "p8_patcher.h"
 #include "p8_lua.h"
 #ifndef IS_CARDPUTER
 #include "gdi.h"
@@ -361,6 +362,69 @@ int p8_init_file_with_param(const char *file_name, const char *param)
         return -1;
     }
 
+    char *patched_script_to_free = NULL;
+    if (lua_script) {
+        char p8t_path[256];
+        snprintf(p8t_path, sizeof(p8t_path), "%s", file_name);
+        
+        // Strip .png if present
+        char *dot_png = strstr(p8t_path, ".png");
+        if (!dot_png) dot_png = strstr(p8t_path, ".PNG");
+        if (dot_png) *dot_png = '\0';
+        
+        // Strip .p8 if present
+        char *dot_p8 = strstr(p8t_path, ".p8");
+        if (!dot_p8) dot_p8 = strstr(p8t_path, ".P8");
+        if (dot_p8) *dot_p8 = '\0';
+        
+#if 0
+        // debug 
+	char dump_orig_path[256];
+        snprintf(dump_orig_path, sizeof(dump_orig_path), "%s_orig.lua", p8t_path);
+        FILE *f_orig = fopen(dump_orig_path, "wb");
+        if (f_orig) {
+            fwrite(lua_script, 1, strlen(lua_script), f_orig);
+            fclose(f_orig);
+            printf("Saved original script to: %s\n", dump_orig_path);
+        } else {
+            printf("Failed to save original script.\n");
+        }
+	// debuug
+#endif
+        
+        strcat(p8t_path, ".p8t");
+        
+        printf("Checking for patch file: %s\n", p8t_path);
+        char *patched_script = apply_p8t_patch(lua_script, p8t_path);
+        if (patched_script) {
+            printf("Applied patch: %s\n", p8t_path);
+#if 0            
+      	    // debug
+            char dump_patch_path[256];
+            // 拡張子を除いたベースパスを取得してファイル名を作成
+            char base_path[256];
+            strcpy(base_path, p8t_path);
+            char *dot_p8t = strstr(base_path, ".p8t");
+            if (dot_p8t) *dot_p8t = '\0';
+            snprintf(dump_patch_path, sizeof(dump_patch_path), "%s_patched.lua", base_path);
+
+            FILE *f_patch = fopen(dump_patch_path, "wb");
+            if (f_patch) {
+                fwrite(patched_script, 1, strlen(patched_script), f_patch);
+                fclose(f_patch);
+                printf("Saved patched script to: %s\n", dump_patch_path);
+            } else {
+                printf("Failed to save patched script.\n");
+            }
+            // ==========================================
+#endif
+            lua_script = patched_script;
+            patched_script_to_free = patched_script;
+        } else {
+            printf("Patch file %s not found or failed to apply.\n", p8t_path);
+        }
+    }
+
 #ifndef IS_CARDPUTER
 #ifdef OS_FREERTOS
     rh_free(m_overlay_memory);
@@ -374,8 +438,10 @@ int p8_init_file_with_param(const char *file_name, const char *param)
 
 #ifdef OS_FREERTOS
     rh_free(file_buffer);
+    if (patched_script_to_free) rh_free(patched_script_to_free);
 #else
     free(file_buffer);
+    if (patched_script_to_free) free(patched_script_to_free);
 #endif
 
     return ret;

@@ -189,7 +189,7 @@ static int parse_p8_ram(const char *file_name, uint8_t *buffer, int size, uint8_
 static int parse_png_ram(const char *file_name, uint8_t *buffer, int size, uint8_t *memory, const char **lua_script, uint8_t **decompression_buffer, uint8_t *label_image);
 static int parse_png_stream(const char *file_name, FILE *file, uint8_t *memory, const char **lua_script, uint8_t **decompression_buffer, uint8_t *label_image);
 static char *process_includes(const char *lua_script, const char *cart_dir);
-static void convert_utf8_to_p8scii(uint8_t *buffer, size_t len);
+// void convert_utf8_to_p8scii(uint8_t *buffer, size_t len);
 
 static uint8_t PNG_SIGNATURE[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 
@@ -406,7 +406,7 @@ int parse_cart_file(const char *file_name, uint8_t *memory, const char **lua_scr
     return 0;
 }
 
-static void convert_utf8_to_p8scii(uint8_t *buffer, size_t len)
+void convert_utf8_to_p8scii(uint8_t *buffer, size_t len)
 {
     uint8_t *read_ptr = buffer;
     uint8_t *write_ptr = buffer;
@@ -767,11 +767,22 @@ static int decode_pngle_state(StegoState *state, const char **lua_script, uint8_
             *lua_script = (char *)*decompression_buffer;
 #else
         const char *mmap_ptr = p8_map_lua_script(*decompression_buffer, actual_len);
-        rh_free(*decompression_buffer);
-        *decompression_buffer = (uint8_t*)rh_malloc(1);
-        if (*decompression_buffer) (*decompression_buffer)[0] = '\0';
-        if (lua_script)
-            *lua_script = mmap_ptr;
+        if (mmap_ptr) {
+            rh_free(*decompression_buffer);
+            *decompression_buffer = (uint8_t*)rh_malloc(1);
+            if (*decompression_buffer) (*decompression_buffer)[0] = '\0';
+            if (lua_script)
+                *lua_script = mmap_ptr;
+        } else {
+            // MMap failed, shrink the decompression buffer using standard realloc
+            // (rh_realloc does not exist) to save heap space and use it directly.
+            uint8_t *shrunk = (uint8_t*)realloc(*decompression_buffer, actual_len + 1);
+            if (shrunk) {
+                *decompression_buffer = shrunk;
+            }
+            if (lua_script)
+                *lua_script = (char *)*decompression_buffer;
+        }
 #endif
     }
     return 0;
