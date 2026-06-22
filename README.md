@@ -21,22 +21,18 @@ RONTO8は、**M5Stack Cardputer** 専用に設計および最適化された PIC
   - Cardputerのディスプレイ、キーボード、スピーカーに完全対応。
 - **SD Card ROM Browser**: Load `.p8.png` or `.p8` cartridges directly from the SD card.
   - SDカードから `.p8.png` や `.p8` 形式のカートリッジを直接ロード可能。
-- **High-speed Emulation**: Tuned Lua compiler and garbage collector to overcome memory limitations of embedded systems.
-  - 組み込み環境のメモリ制限を克服するため、Luaコンパイラとガベージコレクションを徹底的にチューニング。
 - **Audio Support**: Enhanced audio synthesis for authentic PICO-8 SFX and Music playback.
   - PICO-8特有の効果音（SFX）やBGMを再現するオーディオエンジンを搭載。
-- **Color Palette Fix**: Corrected PICO-8 color palette for accurate color reproduction.
-  - PICO-8カラーパレットの色再現精度を修正。
 - **Game Patch System**: Apply `.p8t` patch files at startup to make larger cartridges run on RONTO8.
   - 起動時に `.p8t` パッチファイルを適用し、大きめのカートリッジをROMとして動作させるゲームパッチ機能。
 
 ## 📝 Changelog / 更新履歴
 
 ### v0.52
-- **東方運命の星 (Touhou Unmei no Hoshi) Support**: Fixed array allocation memory leak and pixel collision bug to make unh-3 playable. (東方運命の星対応：配列メモリリークとピクセル衝突判定バグの修正)
+
 - **Volume Control**: Added volume control functionality using `+` and `-` keys. (ボリューム機能の追加)
 - **Error Handling**: Added visual error handling and a red screen halt when Lua errors occur. (エラー処理追加)
-- **Desert Drift Patch**: Fixed the `.p8t` patch for Desert Drift to resolve memory issues and performance. (Desert drift パッチ修正)
+
 
 ### v0.5
 - **High-speed Emulation**: Tuned Lua compiler and garbage collector to overcome memory limitations of embedded systems. (組み込み環境のメモリ制限を克服するため、Luaコンパイラとガベージコレクションを徹底的にチューニング。)
