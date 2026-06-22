@@ -1,4 +1,4 @@
-# RONTO8 for M5Cardputer (v0.53)
+# RONTO8 for M5Cardputer (v0.52)
 
 ![RONTO8 - Desert Drift](dd.gif)
 
@@ -32,10 +32,8 @@ RONTO8は、**M5Stack Cardputer** 専用に設計および最適化された PIC
 
 ## 📝 Changelog / 更新履歴
 
-### v0.53
-- **unh-3 Support**: Fixed array allocation memory leak and pixel collision bug to make unh-3 playable. (unh-3対応：配列メモリリークとピクセル衝突判定バグの修正)
-
 ### v0.52
+- **東方運命の星 (Touhou Unmei no Hoshi) Support**: Fixed array allocation memory leak and pixel collision bug to make unh-3 playable. (東方運命の星対応：配列メモリリークとピクセル衝突判定バグの修正)
 - **Volume Control**: Added volume control functionality using `+` and `-` keys. (ボリューム機能の追加)
 - **Error Handling**: Added visual error handling and a red screen halt when Lua errors occur. (エラー処理追加)
 - **Desert Drift Patch**: Fixed the `.p8t` patch for Desert Drift to resolve memory issues and performance. (Desert drift パッチ修正)
@@ -97,7 +95,7 @@ Patch files are available in the [`carts/`](carts/) folder of this repository.
 | Game / ゲーム | Author | PICO-8 BBS | Patch File |
 |---|---|---|---|
 | Desert Drift | [johanp](https://www.lexaloffle.com/bbs/?uid=15227) | [#31685](https://www.lexaloffle.com/bbs/?tid=31685) | [`Desert Drift.p8t`](carts/Desert%20Drift.p8t) |
-| unh-3 | [Nallebeorn](https://www.lexaloffle.com/bbs/?uid=33240) | [#36992](https://www.lexaloffle.com/bbs/?tid=36992) | [`unh-3.p8t`](carts/unh-3.p8t) |
+| 東方運命の星 (Touhou Unmei no Hoshi) | [Nallebeorn](https://www.lexaloffle.com/bbs/?uid=33240) | [#36992](https://www.lexaloffle.com/bbs/?tid=36992) | [`unh-3.p8t`](carts/unh-3.p8t) |
 
 > More patches coming soon! / 今後も対応ゲームを追加予定です。
 
