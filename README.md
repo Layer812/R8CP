@@ -1,4 +1,4 @@
-# RONTO8 for M5Cardputer (v0.52)
+# RONTO8 for M5Cardputer (v0.53)
 
 ![RONTO8 - Desert Drift](dd.gif)
 
@@ -21,12 +21,19 @@ RONTO8は、**M5Stack Cardputer** 専用に設計および最適化された PIC
   - Cardputerのディスプレイ、キーボード、スピーカーに完全対応。
 - **SD Card ROM Browser**: Load `.p8.png` or `.p8` cartridges directly from the SD card.
   - SDカードから `.p8.png` や `.p8` 形式のカートリッジを直接ロード可能。
+- **High-speed Emulation**: Tuned Lua compiler and garbage collector to overcome memory limitations of embedded systems.
+  - 組み込み環境のメモリ制限を克服するため、Luaコンパイラとガベージコレクションを徹底的にチューニング。
 - **Audio Support**: Enhanced audio synthesis for authentic PICO-8 SFX and Music playback.
   - PICO-8特有の効果音（SFX）やBGMを再現するオーディオエンジンを搭載。
+- **Color Palette Fix**: Corrected PICO-8 color palette for accurate color reproduction.
+  - PICO-8カラーパレットの色再現精度を修正。
 - **Game Patch System**: Apply `.p8t` patch files at startup to make larger cartridges run on RONTO8.
   - 起動時に `.p8t` パッチファイルを適用し、大きめのカートリッジをROMとして動作させるゲームパッチ機能。
 
 ## 📝 Changelog / 更新履歴
+
+### v0.53
+- **unh-3 Support**: Fixed array allocation memory leak and pixel collision bug to make unh-3 playable. (unh-3対応：配列メモリリークとピクセル衝突判定バグの修正)
 
 ### v0.52
 - **Volume Control**: Added volume control functionality using `+` and `-` keys. (ボリューム機能の追加)
@@ -54,10 +61,10 @@ RONTO8は、**M5Stack Cardputer** 専用に設計および最適化された PIC
 
 ### Via M5Burner (Recommended)
 You can easily install RONTO8 using M5Burner with the following share code:
-- **Share Code**: `gPL4euqSzMhhhyfd`
+- **Share Code**: `rSROLPWU9dGIuN3I`
 
-M5Burnerのシェアコード検索から簡単にインストールできます！
-- **シェアコード**: `gPL4euqSzMhhhyfd`
+M5Burnerのシェアコード検索から簡単にインストールできます：
+- **シェアコード**: `rSROLPWU9dGIuN3I`
 
 ### Building from Source / ソースからビルドする場合
 
@@ -90,6 +97,7 @@ Patch files are available in the [`carts/`](carts/) folder of this repository.
 | Game / ゲーム | Author | PICO-8 BBS | Patch File |
 |---|---|---|---|
 | Desert Drift | [johanp](https://www.lexaloffle.com/bbs/?uid=15227) | [#31685](https://www.lexaloffle.com/bbs/?tid=31685) | [`Desert Drift.p8t`](carts/Desert%20Drift.p8t) |
+| unh-3 | [Nallebeorn](https://www.lexaloffle.com/bbs/?uid=33240) | [#36992](https://www.lexaloffle.com/bbs/?tid=36992) | [`unh-3.p8t`](carts/unh-3.p8t) |
 
 > More patches coming soon! / 今後も対応ゲームを追加予定です。
 
