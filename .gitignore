@@ -8,3 +8,5 @@ build-mac
 SDL-1.2/
 sample/
 *.bin
+.agents
+picotool
