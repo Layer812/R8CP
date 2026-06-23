@@ -102,7 +102,7 @@ Patch files are available in the [`carts/`](carts/) folder of this repository.
 | P.Craft | NuSan | [#3200](https://www.lexaloffle.com/bbs/?tid=3200) | [`24981.p8t`](carts/24981.p8t) |
 | Wizardish - A First-Person Grid-Based Dungeon Crawler! v2.1 tiny update | Eduardolicious | [#3585](https://www.lexaloffle.com/bbs/?tid=3585) | [`27415.p8t`](carts/27415.p8t) |
 | Pico Fox | electricgryphon | [#28067](https://www.lexaloffle.com/bbs/?tid=28067) | [`32479.p8t`](carts/32479.p8t) |
-| Super Mario Bros (Clone) | Spoke | [#38190](https://www.lexaloffle.com/bbs/?tid=38190) | [38190.p8t](https://gemini.google.com/carts/38190.p8t)|
+| Super Mario Bros (Clone) | Spoke | [#38190](https://www.lexaloffle.com/bbs/?tid=28942) | [`38190.p8t`](carts/38190.p8t)|
 
 > More patches coming soon! / 今後も対応ゲームを追加予定です。
 
