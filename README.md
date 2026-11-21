@@ -1,4 +1,4 @@
-# RONTO8 for M5Cardputer (v0.53)
+# RONTO8 for M5Cardputer
 
 ![RONTO8 - SMB](smb.gif)
 
@@ -28,6 +28,14 @@ RONTO8は、**M5Stack Cardputer** 専用に設計および最適化された PIC
 
 ## 📝 Changelog / 更新履歴
 
+### 2026-11-21 — Cardputer compatibility update / Cardputer互換性改善
+- **Terra 1.4.4b (Terraria demake, by cubee):** Addressed the reported loading/reboot issue with P8T patch handling, Lua memory reductions, and extended map support (`256 × 128` tiles). On the tested Cardputer, Terra now starts and its terrain is displayed. Full gameplay and M5Launcher return behavior have not yet been verified. ([Issue #1](https://github.com/Layer812/R8CP/issues/1))
+  - **Terra 1.4.4b 対応：** P8Tパッチ処理、Luaメモリ使用量、拡張マップ描画を改善しました。Cardputer実機で起動と地形表示を確認済みです。全ゲーム進行およびM5Launcherへの復帰動作は未検証です。
+- **ROM browser / ROMブラウザ:** Inverted-row highlighting for the selected item and one movement per key press (no accidental double steps). / 選択行を反転表示し、1回のキー操作で複数行移動しないよう入力処理を調整。
+- **Audio / 音声:** Safer playback buffer rotation, saturated PCM mixing, and an SFX channel bounds fix. / バッファ管理、PCM合成の飽和処理、SFXの範囲外アクセスを改善。
+- **Lua memory / メモリ:** Reduced Lua debug metadata and improved memory handling during patched-cartridge loading; very large carts may still encounter memory limits. / Luaのデバッグ情報とパッチ済みカート読込時のメモリ消費を削減。大容量作品には引き続き制約があります。
+
+
 ### v0.53
 - **SMB ROM Support**: Added support for Super Mario Bros (Clone). Implemented massive memory optimizations including SD streaming compilation and direct VRAM rendering patches to ensure stability. (SMBロムに対応。SDストリーミングコンパイルとVRAM直接描画パッチの実装により、メモリ制限を突破し動作の安定性を劇的に向上。)
 
@@ -56,10 +64,11 @@ RONTO8は、**M5Stack Cardputer** 専用に設計および最適化された PIC
 
 ### Via M5Burner (Recommended)
 You can easily install RONTO8 using M5Burner with the following share code:
-- **Share Code**: `7YPwG8kVxNWh5mFg`
+- **Share Code**: `3nOOyrHDX0QwTXvR`
 
 M5Burnerのシェアコード検索から簡単にインストールできます：
-- **シェアコード**: `7YPwG8kVxNWh5mFg`
+- **シェアコード**: `3nOOyrHDX0QwTXvR`
+- **Web Burner / ブラウザから書き込み**: https://burner.m5stack.com/5RQCCY
 
 ### Building from Source / ソースからビルドする場合
 
@@ -103,6 +112,7 @@ Patch files are available in the [`carts/`](carts/) folder of this repository.
 | Wizardish - A First-Person Grid-Based Dungeon Crawler! v2.1 tiny update | Eduardolicious | [#3585](https://www.lexaloffle.com/bbs/?tid=3585) | [`27415.p8t`](carts/27415.p8t) |
 | Pico Fox | electricgryphon | [#28067](https://www.lexaloffle.com/bbs/?tid=28067) | [`32479.p8t`](carts/32479.p8t) |
 | Super Mario Bros (Clone) | Sascha217 | [#38190](https://www.lexaloffle.com/bbs/?tid=28942) | [`38190.p8t`](carts/38190.p8t)|
+| **Terra — A Terraria Demake (v1.4.4b)** | [cubee](https://cubeegames.itch.io/terra-a-terraria-demake) | [PICO-8 BBS](https://www.lexaloffle.com/bbs/?pid=97269) | [`terra_1cart-44.p8t`](carts/terra_1cart-44.p8t) |
 
 > More patches coming soon! / 今後も対応ゲームを追加予定です。
 
@@ -115,5 +125,6 @@ RONTO8 is heavily based on the incredible work of the open-source community:
 - [Jacopo Santoni](https://github.com/Jakz) - Author of [retro8](https://github.com/Jakz/retro8)
 - [Lexaloffle](https://www.lexaloffle.com/) - The visionary creator of the amazing PICO-8 fantasy console.
 - **Layer8** - M5Cardputer Port, Audio engine fixes, and memory optimization.
+- **[@pincheng20110515](https://github.com/pincheng20110515)** - Thank you for reporting the Terra loading/reboot problem in [Issue #1](https://github.com/Layer812/R8CP/issues/1), which prompted these compatibility improvements. / Terra起動時の再起動問題をご報告いただき、ありがとうございました。
 
 *(C) 2026 Layer8. BASED ON FEMTO8 & ZEPTO8.*
