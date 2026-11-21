@@ -1,0 +1,30 @@
+[SEARCH]
+function _init()
+for i=-32768,0x55ff do
+poke(i)
+end
+[REPLACE]
+function _init()
+-- ronto8: poke(addr) with no value does nothing; 54k no-op calls removed
+[/]
+[SEARCH]
+function tospr(str,w,x,y)
+for i=0,#(str or "")-2 do
+sset(x+i%w,y+i\w,tonum("0x"..str[i+1]))
+end
+end
+[REPLACE]
+function tospr(str,w,x,y)
+str=str or ""
+for i=0,#str-2 do
+local c=ord(str,i+1)
+local v=c-48
+if c>=97 then
+v=c-87
+elseif c>=65 then
+v=c-55
+end
+sset(x+i%w,y+i\w,v)
+end
+end
+[/]
