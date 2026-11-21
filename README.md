@@ -29,8 +29,8 @@ RONTO8は、**M5Stack Cardputer** 専用に設計および最適化された PIC
 ## 📝 Changelog / 更新履歴
 
 ### 2026-11-21 — Cardputer compatibility update / Cardputer互換性改善
-- **Terra 1.4.4b (Terraria demake, by cubee):** Addressed the reported loading/reboot issue with P8T patch handling, Lua memory reductions, and extended map support (`256 × 128` tiles). On the tested Cardputer, Terra now starts and its terrain is displayed. Full gameplay and M5Launcher return behavior have not yet been verified. ([Issue #1](https://github.com/Layer812/R8CP/issues/1))
-  - **Terra 1.4.4b 対応：** P8Tパッチ処理、Luaメモリ使用量、拡張マップ描画を改善しました。Cardputer実機で起動と地形表示を確認済みです。全ゲーム進行およびM5Launcherへの復帰動作は未検証です。
+- **Terra 1.4.4b (Terraria demake, by cubee):** Addressed the reported loading/reboot issue with P8T patch handling, Lua memory reductions, and extended map support (`256 × 128` tiles). On the tested Cardputer, Terra now starts and its terrain is displayed. Return to M5Launcher was subsequently confirmed by the project maintainer. Full gameplay remains unverified. ([Issue #1](https://github.com/Layer812/R8CP/issues/1))
+  - **Terra 1.4.4b 対応：** P8Tパッチ処理、Luaメモリ使用量、拡張マップ描画を改善しました。Cardputer実機で起動と地形表示を確認済みです。その後、M5Launcherへの復帰動作も確認できました。ゲーム全体の通しプレイは未検証です。
 - **ROM browser / ROMブラウザ:** Inverted-row highlighting for the selected item and one movement per key press (no accidental double steps). / 選択行を反転表示し、1回のキー操作で複数行移動しないよう入力処理を調整。
 - **Audio / 音声:** Safer playback buffer rotation, saturated PCM mixing, and an SFX channel bounds fix. / バッファ管理、PCM合成の飽和処理、SFXの範囲外アクセスを改善。
 - **Lua memory / メモリ:** Reduced Lua debug metadata and improved memory handling during patched-cartridge loading; very large carts may still encounter memory limits. / Luaのデバッグ情報とパッチ済みカート読込時のメモリ消費を削減。大容量作品には引き続き制約があります。
