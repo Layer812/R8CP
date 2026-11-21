@@ -217,7 +217,7 @@ static int luaK_code (FuncState *fs, Instruction i) {
                   MAX_INT, "opcodes");
   f->code[fs->pc] = i;
   /* save corresponding line information */
-#ifndef OS_FREERTOS
+#if !defined(OS_FREERTOS) && !defined(IS_CARDPUTER)
   luaM_growvector(fs->ls->L, f->lineinfo, fs->pc, f->sizelineinfo, int,
                   MAX_INT, "opcodes");
   f->lineinfo[fs->pc] = fs->ls->lastline;
@@ -883,7 +883,7 @@ void luaK_posfix (FuncState *fs, BinOpr op,
 
 
 void luaK_fixline (FuncState *fs, int line) {
-#ifndef OS_FREERTOS
+#if !defined(OS_FREERTOS) && !defined(IS_CARDPUTER)
   fs->f->lineinfo[fs->pc - 1] = line;
 #endif
 }

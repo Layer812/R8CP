@@ -136,7 +136,7 @@ void luaF_freeproto (lua_State *L, Proto *f) {
   luaM_freearray(L, f->code, f->sizecode);
   luaM_freearray(L, f->p, f->sizep);
   luaM_freearray(L, f->k, f->sizek);
-#ifndef OS_FREERTOS
+#if !defined(OS_FREERTOS) && !defined(IS_CARDPUTER)
   luaM_freearray(L, f->lineinfo, f->sizelineinfo);
 #endif
   luaM_freearray(L, f->locvars, f->sizelocvars);

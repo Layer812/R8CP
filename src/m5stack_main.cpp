@@ -116,7 +116,7 @@ static void draw_browser()
     M5Cardputer.Display.setCursor(5, 25);
     M5Cardputer.Display.println(g_browser_path);
 
-    M5Cardputer.Display.drawRect(2, 35, 236, 80, TFT_BLACK);
+    M5Cardputer.Display.drawRect(2, 34, 236, 83, TFT_BLACK);
     
     M5Cardputer.Display.setTextSize(2);
     int visible = 5;
@@ -128,10 +128,14 @@ static void draw_browser()
             start = g_browser_count - visible;
     }
 
-    int y_pos = 38;
+    int y_pos = 36;
     for (int i = start; i < start + visible && i < g_browser_count; i++) {
+        const bool selected = (i == g_browser_cursor);
+        if (selected)
+            M5Cardputer.Display.fillRect(4, y_pos, 232, 16, TFT_BLACK);
+        M5Cardputer.Display.setTextColor(selected ? r4_yellow : TFT_BLACK,
+                                         selected ? TFT_BLACK : r4_yellow);
         M5Cardputer.Display.setCursor(6, y_pos);
-        M5Cardputer.Display.print(i == g_browser_cursor ? ">" : " ");
         const char* entry_name = g_browser_name_buf + g_browser_name_offsets[i];
         if (g_browser_is_dir[i]) {
             M5Cardputer.Display.print("[");
@@ -143,10 +147,11 @@ static void draw_browser()
         y_pos += 16;
     }
 
+    M5Cardputer.Display.setTextColor(TFT_BLACK, r4_yellow);
     M5Cardputer.Display.setTextSize(1);
-    M5Cardputer.Display.setCursor(5, 115);
+    M5Cardputer.Display.setCursor(5, 118);
     M5Cardputer.Display.println("UP: W/; DOWN: S/. ENTER: Open");
-    M5Cardputer.Display.setCursor(5, 125);
+    M5Cardputer.Display.setCursor(5, 126);
     M5Cardputer.Display.println("BS: Back");
 }
 
@@ -161,6 +166,9 @@ static String browse_for_rom()
     draw_browser();
 
     String selected_file = "";
+
+    bool browser_key_armed = false;
+    uint32_t browser_released_at_ms = 0;
 
     while (true) {
         M5Cardputer.update();
@@ -181,6 +189,18 @@ static String browse_for_rom()
             if (c == '\n' || c == '\r') enter = true;
         }
 
+        const uint32_t now_ms = millis();
+        const bool key_down = M5Cardputer.Keyboard.isPressed() != 0;
+        if (!key_down) {
+            if (browser_released_at_ms == 0) browser_released_at_ms = now_ms;
+            if ((uint32_t)(now_ms - browser_released_at_ms) >= 40)
+                browser_key_armed = true;
+        } else {
+            browser_released_at_ms = 0;
+        }
+        const bool pressed_once = key_down && browser_key_armed;
+        if (pressed_once) browser_key_armed = false;
+        if (pressed_once) {
         if (up && g_browser_cursor > 0) {
             g_browser_cursor--;
             draw_browser();
@@ -246,7 +266,8 @@ static String browse_for_rom()
                 break;
             }
         }
-        delay(50);
+        }
+        delay(12);
     }
 
     free(g_browser_name_buf);
@@ -262,13 +283,13 @@ static String browse_for_rom()
 static void audio_task(void *pvParameters)
 {
     const int sample_count = 256;
-    int16_t *audio_buf[2];
-    audio_buf[0] = (int16_t *)malloc(sample_count * sizeof(int16_t));
-    audio_buf[1] = (int16_t *)malloc(sample_count * sizeof(int16_t));
+    int16_t *audio_buf[3] = {nullptr, nullptr, nullptr};
+    for (int i = 0; i < 3; ++i)
+        audio_buf[i] = (int16_t *)malloc(sample_count * sizeof(int16_t));
 
-    if (!audio_buf[0] || !audio_buf[1]) {
-        if (audio_buf[0]) free(audio_buf[0]);
-        if (audio_buf[1]) free(audio_buf[1]);
+    if (!audio_buf[0] || !audio_buf[1] || !audio_buf[2]) {
+        for (int i = 0; i < 3; ++i)
+            if (audio_buf[i]) free(audio_buf[i]);
         vTaskDelete(NULL);
         return;
     }
@@ -279,7 +300,7 @@ static void audio_task(void *pvParameters)
         while (!M5Cardputer.Speaker.playRaw(audio_buf[current_buf], sample_count, 22050, false, 1, 0)) {
             vTaskDelay(pdMS_TO_TICKS(1));
         }
-        current_buf = 1 - current_buf;
+        current_buf = (current_buf + 1) % 3;
     }
 }
 
@@ -420,10 +441,10 @@ void setup()
     
     extern unsigned char *m_memory;
     if (!m_memory) {
-        m_memory = (uint8_t *)malloc(MEMORY_SIZE); // 32KB
+        m_memory = (uint8_t *)malloc(MEMORY_SIZE); // 64KB
         if (m_memory) {
             memset(m_memory, 0, MEMORY_SIZE);
-            Serial.printf("[Memory] m_memory (32KB) allocated as early singleton.\n");
+            Serial.printf("[Memory] m_memory (64KB) allocated as early singleton.\n");
         } else {
             Serial.printf("[Memory] FATAL: Failed to allocate m_memory at boot!\n");
         }
@@ -439,7 +460,7 @@ void setup()
     M5Cardputer.Speaker.begin();
     M5Cardputer.Speaker.setVolume(255);
     
-    M5Cardputer.Display.setRotation(1);
+    M5Cardputer.Display.setRotation(0);
     M5Cardputer.Display.setColorDepth(16);
     M5Cardputer.Display.setSwapBytes(true);
     M5Cardputer.Display.fillScreen(TFT_BLACK);
@@ -501,7 +522,7 @@ void setup()
         g_emulator_ready = false;
         g_emulator_init_failed = false;
 
-        xTaskCreatePinnedToCore(emulator_init_task, "emulator_init_task", 6144, (void *)param_path, 2, NULL, 1);
+        xTaskCreatePinnedToCore(emulator_init_task, "emulator_init_task", 16384, (void *)param_path, 2, NULL, 1);
 
         return;
     } else {

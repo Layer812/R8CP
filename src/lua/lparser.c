@@ -603,7 +603,7 @@ static void close_func (LexState *ls) {
   leaveblock(fs);
   luaM_reallocvector(L, f->code, f->sizecode, fs->pc, Instruction);
   f->sizecode = fs->pc;
-#ifndef OS_FREERTOS
+#if !defined(OS_FREERTOS) && !defined(IS_CARDPUTER)
   luaM_reallocvector(L, f->lineinfo, f->sizelineinfo, fs->pc, int);
   f->sizelineinfo = fs->pc;
 #endif
@@ -611,7 +611,7 @@ static void close_func (LexState *ls) {
   f->sizek = fs->nk;
   luaM_reallocvector(L, f->p, f->sizep, fs->np, Proto *);
   f->sizep = fs->np;
-#ifndef OS_FREERTOS
+#if !defined(OS_FREERTOS) && !defined(IS_CARDPUTER)
   luaM_reallocvector(L, f->locvars, f->sizelocvars, fs->nlocvars, LocVar);
   f->sizelocvars = fs->nlocvars;
 #else

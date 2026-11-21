@@ -1095,9 +1095,9 @@ int map(lua_State *L)
 {
     int default_celw = m_memory[MEMORY_MAP_WIDTH];
     if (default_celw == 0)
-        default_celw = 128;
+        default_celw = 256;
     int map_start = m_memory[MEMORY_MAP_START];
-    int max_map_cells = (map_start >= 0x80) ? (0x8000 - (map_start << 8)) : 0x2000;
+    int max_map_cells = (map_start >= 0x80) ? (0x10000 - (map_start << 8)) : 0x2000;
     int default_celh = (default_celw > 0) ? (max_map_cells / default_celw) : 64;
 
     int celx = lua_gettop(L) >= 1 ? lua_tointeger(L, 1) : 0;
@@ -1946,6 +1946,9 @@ int _stat(lua_State *L)
         m_keypress = 0;
         break;
     }
+    case 120:
+        lua_pushboolean(L, 0);
+        break;
     case STAT_MOUSE_X:
         lua_pushinteger(L, m_mouse_x);
         break;
@@ -2669,8 +2672,12 @@ bool lua_has_main_loop_callbacks()
 
 void lua_init()
 {
-    if (m_lua_init)
+    if (m_lua_init) {
         lua_call_function("_init", 0);
+#ifdef IS_CARDPUTER
+        if (L) lua_gc(L, LUA_GCCOLLECT, 0);
+#endif
+    }
 
     if (!m_lua_update && !m_lua_update60)
     {

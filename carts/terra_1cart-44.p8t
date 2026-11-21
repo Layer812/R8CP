@@ -28,3 +28,23 @@ sset(x+i%w,y+i\w,v)
 end
 end
 [/]
+[SEARCH]
+function _update60()
+menuitem(5,mute and "music: off" or "music: on",function()mute=not mute dset(1,mute and 1 or 0) end)
+[REPLACE]
+function r8_terra_music_toggle()
+ mute=not mute
+ dset(1,mute and 1 or 0)
+end
+function r8_terra_mouse_toggle()
+ mouse=not mouse
+ dset(0,mouse and 1 or 0)
+end
+function _update60()
+menuitem(5,mute and "music: off" or "music: on",r8_terra_music_toggle)
+[/]
+[SEARCH]
+menuitem(4,mouse and "mouse: on" or "mouse: off",function()mouse=not mouse dset(0,mouse and 1 or 0) end)
+[REPLACE]
+menuitem(4,mouse and "mouse: on" or "mouse: off",r8_terra_mouse_toggle)
+[/]

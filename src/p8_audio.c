@@ -376,7 +376,7 @@ void update_sound_queue()
 
             if (sound->index == -1)
             {
-                if (sound->channel >= 0 && sound->channel <= CHANNEL_COUNT)
+                if (sound->channel >= 0 && sound->channel < CHANNEL_COUNT)
                     m_channels[sound->channel].sound_mode = SOUNDMODE_NONE;
                 continue;
             }
@@ -425,7 +425,7 @@ void update_sound_queue()
                 
                 sound->channel = best_channel;
             }
-            if (sound->channel >= 0 && sound->channel < CHANNEL_COUNT && sound->index >= 0 && sound->index <= SOUND_COUNT)
+            if (sound->channel >= 0 && sound->channel < CHANNEL_COUNT && sound->index >= 0 && sound->index < SOUND_COUNT)
             {
                 soundstate_t *channel = &m_channels[sound->channel];
                 uint8_t speed = m_memory[MEMORY_SFX + 68 * sound->index + 64 + 1];
@@ -519,6 +519,13 @@ void render_sound(int waveform, int pitch, int volume, int position, int offset,
         dsp_triangle_wave((unsigned int)(frequency * 1.01f), amplitude / 2, 0, position, offset, length, buffer);
         break;
     }
+}
+
+static inline int16_t r8cp_audio_sat16_pcm(int32_t value)
+{
+    if (value > 32767) return 32767;
+    if (value < -32768) return -32768;
+    return (int16_t)value;
 }
 
 void render_sounds(int16_t *buffer, int total_samples)
@@ -729,11 +736,11 @@ void render_sounds(int16_t *buffer, int total_samples)
             if (dampen_enabled)
             {
                 m_pcm_dampen = (sample16 + m_pcm_dampen * 3) / 4;
-                buffer[i] = (int16_t)(buffer[i] + m_pcm_dampen);
+                buffer[i] = r8cp_audio_sat16_pcm((int32_t)buffer[i] + m_pcm_dampen);
             }
             else
             {
-                buffer[i] = (int16_t)(buffer[i] + sample16);
+                buffer[i] = r8cp_audio_sat16_pcm((int32_t)buffer[i] + sample16);
             }
 
             m_pcm_repeat++;

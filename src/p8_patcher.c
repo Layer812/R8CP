@@ -3,6 +3,12 @@
 #include <string.h>
 #include <stdbool.h>
 #include "p8_patcher.h"
+#include <errno.h>
+#include "r8cp_terra_r2_embedded.h"
+#ifdef IS_CARDPUTER
+extern long r8cp_p8t_sd_size(const char *posix_path);
+extern long r8cp_p8t_sd_read(const char *posix_path, char *dest, size_t length);
+#endif
 
 #ifdef OS_FREERTOS
 extern void *rh_malloc(size_t size);
@@ -87,22 +93,59 @@ static const char *find_match(const char *haystack, const char *needle, size_t *
 }
 
 char *apply_p8t_patch(const char *old_script, const char *p8t_path) {
+    long p8t_len = 0;
+    char *p8t_buf = NULL;
     FILE *f = fopen(p8t_path, "rb");
-    if (!f) return NULL;
-
-    fseek(f, 0, SEEK_END);
-    long p8t_len = ftell(f);
-    rewind(f);
-
-    if (p8t_len <= 0) {
+    if (f) {
+        if (fseek(f, 0, SEEK_END) == 0) {
+            p8t_len = ftell(f);
+            rewind(f);
+            if (p8t_len > 0 && p8t_len <= 1048576) {
+                p8t_buf = (char *)rh_malloc((size_t)p8t_len + 1);
+                if (p8t_buf && fread(p8t_buf, 1, (size_t)p8t_len, f) != (size_t)p8t_len) {
+                    rh_free(p8t_buf);
+                    p8t_buf = NULL;
+                }
+            }
+        }
         fclose(f);
-        return NULL;
     }
-
-    char *p8t_buf = (char *)rh_malloc(p8t_len + 1);
-    fread(p8t_buf, 1, p8t_len, f);
+#ifdef IS_CARDPUTER
+    if (!p8t_buf) {
+        const long sd_len = r8cp_p8t_sd_size(p8t_path);
+        if (sd_len > 0 && sd_len <= 1048576) {
+            char *sd_buf = (char *)rh_malloc((size_t)sd_len + 1);
+            if (sd_buf) {
+                if (r8cp_p8t_sd_read(p8t_path, sd_buf, (size_t)sd_len) == sd_len) {
+                    p8t_buf = sd_buf;
+                    p8t_len = sd_len;
+                } else {
+                    rh_free(sd_buf);
+                }
+            }
+        }
+    }
+#endif
+    if (p8t_buf) p8t_buf[p8t_len] = '\0';
+    const char *patch_name = strrchr(p8t_path, '/');
+    patch_name = patch_name ? patch_name + 1 : p8t_path;
+    if (strcmp(patch_name, "terra_1cart-44.p8t") == 0) {
+        const bool old_patch = p8t_buf &&
+            strstr(p8t_buf, "54k no-op calls removed") &&
+            !strstr(p8t_buf, "r8_terra_music_toggle");
+        if (!p8t_buf || old_patch) {
+            const size_t new_len = sizeof(r8cp_terra_r2_embedded_p8t) - 1;
+            char *new_buf = (char *)rh_malloc(new_len + 1);
+            if (new_buf) {
+                memcpy(new_buf, r8cp_terra_r2_embedded_p8t, new_len + 1);
+                if (p8t_buf) rh_free(p8t_buf);
+                p8t_buf = new_buf;
+                p8t_len = (long)new_len;
+            }
+        }
+    }
+    if (!p8t_buf) return NULL;
     p8t_buf[p8t_len] = '\0';
-    fclose(f);
 
     // ==========================================
     // UTF-8絵文字をバイトコードで直接指定して置換
@@ -128,13 +171,21 @@ char *apply_p8t_patch(const char *old_script, const char *p8t_path) {
         start_ptr += 3;
     }
 
-    // Make a mutable copy of old_script to work with
     size_t old_len = strlen(old_script);
-    char *script_buf = (char *)rh_malloc(old_len + 1);
-    memcpy(script_buf, old_script, old_len + 1);
-
-    // Apply patches sequentially
-    char *current_script = script_buf;
+    if (p8t_len <= 0 || (size_t)p8t_len > (size_t)-1 - old_len - 1) {
+        rh_free(p8t_buf);
+        return NULL;
+    }
+    const size_t script_capacity = old_len + (size_t)p8t_len + 1;
+    char *current_script = (char *)rh_malloc(script_capacity);
+    if (!current_script) {
+        rh_free(p8t_buf);
+        return NULL;
+    }
+    memcpy(current_script, old_script, old_len + 1);
+    size_t current_length = old_len;
+    unsigned matched_blocks = 0;
+    unsigned total_blocks = 0;
 
     char *line = start_ptr;
     while (line && *line) {
@@ -173,22 +224,26 @@ char *apply_p8t_patch(const char *old_script, const char *p8t_path) {
             }
 
             if (block_closed && search_sb.length > 0) {
+                ++total_blocks;
                 size_t match_len = 0;
                 const char *match = find_match(current_script, search_sb.data, &match_len);
                 if (match) {
-                    StringBuilder new_script;
-                    sb_init(&new_script);
-
-                    // Append prefix
-                    sb_append(&new_script, current_script, match - current_script);
-                    // Append replacement
-                    sb_append(&new_script, replace_sb.data, replace_sb.length);
-                    // Append suffix
-                    const char *suffix = match + match_len;
-                    sb_append(&new_script, suffix, strlen(suffix));
-
-                    rh_free(current_script);
-                    current_script = new_script.data;
+                    const size_t pos = (size_t)(match - current_script);
+                    const size_t added = replace_sb.length;
+                    if (pos > current_length || match_len > current_length - pos ||
+                        added > script_capacity - 1 - (current_length - match_len)) {
+                        rh_free(search_sb.data);
+                        rh_free(replace_sb.data);
+                        rh_free(p8t_buf);
+                        rh_free(current_script);
+                        return NULL;
+                    }
+                    const size_t tail = current_length - pos - match_len;
+                    memmove(current_script + pos + added,
+                            current_script + pos + match_len, tail + 1);
+                    memcpy(current_script + pos, replace_sb.data, added);
+                    current_length = current_length - match_len + added;
+                    ++matched_blocks;
                 } else {
                     printf("Patch warning: Could not find SEARCH block:\n%s\n", search_sb.data);
                 }
@@ -202,5 +257,10 @@ char *apply_p8t_patch(const char *old_script, const char *p8t_path) {
     }
 
     rh_free(p8t_buf);
+    if (strcmp(patch_name, "terra_1cart-44.p8t") == 0 &&
+        (total_blocks != 4 || matched_blocks != 4)) {
+        rh_free(current_script);
+        return NULL;
+    }
     return current_script;
 }
